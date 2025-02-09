@@ -30,7 +30,7 @@ invalid_person = {
 }
 
 # Базовый URL
-BASE_URL = "http://localhost:3000/api/v1/persons"
+BASE_URL = "https://bmstu-rsoi-lab1-64nw.onrender.com/api/v1/persons"
 
 @pytest.mark.parametrize("persons", [person1, person2])
 def test_post_get(persons):

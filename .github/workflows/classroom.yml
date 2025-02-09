@@ -11,12 +11,37 @@ jobs:
     name: Autograding
     runs-on: ubuntu-latest
     steps:
+      # Шаг 1: Checkout исходного кода
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # TODO build, test and deploy project
+      # Шаг 2: Установка зависимостей для Python и Docker
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Шаг 3: Установка Docker и сборка контейнера
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Run Docker container
+        run: |
+          docker build -t app .
+          docker-compose -f docker-compose.yml up -d
+
+      # Шаг 4: Запуск юнит-тестов
+      - name: Run Unit Tests
+        run: |
+          pytest tests/tests.py --maxfail=1 --disable-warnings -q
+
+      # Шаг 5: Проверка API с использованием Newman (Postman)
       - name: Run API Tests
         uses: matt-ball/newman-action@master
         with:
@@ -24,17 +49,17 @@ jobs:
           environment: postman/[inst][heroku] Lab1.postman_environment.json
           delayRequest: 100
           reporters: '[ "cli" ]'
-
+      
+      # Шаг 6: Деплой на Render
+      - name: Deploy to Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          curl -X POST https://api.render.com/v1/services \
+          -H "Authorization: Bearer $RENDER_API_KEY" \
+        
+      # Шаг 7: Завершение автогрейдинга
       - name: Autograding
         uses: education/autograding@v1
         continue-on-error: true
-
-      - name: Github auto grader mark
-        uses: Romanow/google-sheet-autograder-marker@v1.0
-        with:
-          google_token: ${{secrets.GOOGLE_API_KEY}}
-          sheet_id: "1xkgjUX6Qmk7rdJG-QPOToav-HWWtthJjnShIKnw3oIY"
-          homework_number: 1
-          user_column: 'D'
-          column_offset: 'F'
-          mark: "'+"
+        
