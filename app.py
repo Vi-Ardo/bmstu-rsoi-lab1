@@ -57,7 +57,7 @@ def delete_person(person_id):
     answer = person_service.delete_person(person_id)
     if answer == 0:
         return make_response(f'Person for ID {person_id} not found', 404)
-    return make_response(f'Person for ID {person_id} was removed', 200)
+    return make_response(f'Person for ID {person_id} was removed', 204)
 
 if __name__ == '__main__':
     host = '0.0.0.0'
